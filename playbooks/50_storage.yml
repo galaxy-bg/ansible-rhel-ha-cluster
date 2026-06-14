@@ -1,0 +1,7 @@
+---
+- name: Configure shared iSCSI and ZFS storage
+  hosts: ha_cluster
+  become: true
+  roles:
+    - storage
+

@@ -1,0 +1,7 @@
+---
+- name: Configure cluster properties
+  hosts: ha_cluster
+  become: true
+  roles:
+    - cluster_properties
+

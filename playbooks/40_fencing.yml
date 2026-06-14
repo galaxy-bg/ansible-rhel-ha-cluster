@@ -1,0 +1,7 @@
+---
+- name: Configure STONITH fencing
+  hosts: ha_cluster
+  become: true
+  roles:
+    - fencing
+

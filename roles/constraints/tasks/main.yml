@@ -1,0 +1,21 @@
+---
+- name: Add colocation constraint for VIP with ZFS pool
+  ansible.builtin.command: "pcs constraint colocation add {{ vip_resource_name }} with zfs-pool INFINITY"
+  run_once: true
+  register: colocation_add
+  changed_when: colocation_add.rc == 0
+  failed_when:
+    - colocation_add.rc != 0
+    - "'duplicate' not in colocation_add.stderr | lower"
+    - "'already exists' not in colocation_add.stderr | lower"
+
+- name: Add order constraint for ZFS before VIP
+  ansible.builtin.command: "pcs constraint order start zfs-pool then {{ vip_resource_name }}"
+  run_once: true
+  register: order_add
+  changed_when: order_add.rc == 0
+  failed_when:
+    - order_add.rc != 0
+    - "'duplicate' not in order_add.stderr | lower"
+    - "'already exists' not in order_add.stderr | lower"
+

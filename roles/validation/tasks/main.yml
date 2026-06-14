@@ -1,0 +1,26 @@
+---
+- name: Show pcs status
+  ansible.builtin.command: pcs status --full
+  register: pcs_status_full
+  changed_when: false
+  run_once: true
+
+- name: Show ZFS pool status
+  ansible.builtin.command: zpool status
+  register: zpool_status
+  changed_when: false
+  failed_when: false
+
+- name: Show iSCSI sessions
+  ansible.builtin.command: iscsiadm -m session
+  register: iscsi_sessions
+  changed_when: false
+  failed_when: false
+
+- name: Print validation summary
+  ansible.builtin.debug:
+    msg:
+      - "{{ pcs_status_full.stdout_lines | default([]) }}"
+      - "{{ zpool_status.stdout_lines | default([]) }}"
+      - "{{ iscsi_sessions.stdout_lines | default([]) }}"
+

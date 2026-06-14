@@ -1,0 +1,7 @@
+---
+- name: Prepare RHEL nodes
+  hosts: ha_cluster
+  become: true
+  roles:
+    - common
+

@@ -1,0 +1,132 @@
+#!/bin/sh
+#
+# OCF resource agent for safe ZFS pool failover.
+#
+
+: "${OCF_FUNCTIONS_DIR:=/usr/lib/ocf/lib/heartbeat}"
+. "$OCF_FUNCTIONS_DIR/ocf-shellfuncs"
+
+meta_data() {
+    cat <<'EOF'
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="zpool-ha" version="1.0">
+  <version>1.0</version>
+  <longdesc lang="en">
+Safely imports, monitors, and exports a ZFS pool for active/passive Pacemaker clusters.
+This agent never uses forced import.
+  </longdesc>
+  <shortdesc lang="en">Safe ZFS pool failover agent</shortdesc>
+  <parameters>
+    <parameter name="pool" unique="1" required="1">
+      <longdesc lang="en">ZFS pool name.</longdesc>
+      <shortdesc lang="en">ZFS pool name</shortdesc>
+      <content type="string"/>
+    </parameter>
+  </parameters>
+  <actions>
+    <action name="start" timeout="60s"/>
+    <action name="stop" timeout="120s"/>
+    <action name="monitor" timeout="20s" interval="30s"/>
+    <action name="meta-data" timeout="5s"/>
+    <action name="validate-all" timeout="20s"/>
+  </actions>
+</resource-agent>
+EOF
+}
+
+zpool_usage() {
+    cat <<EOF
+usage: $0 {start|stop|monitor|validate-all|meta-data}
+EOF
+}
+
+zpool_validate() {
+    if [ -z "$OCF_RESKEY_pool" ]; then
+        ocf_exit_reason "pool parameter is required"
+        return "$OCF_ERR_CONFIGURED"
+    fi
+
+    for cmd in zpool zfs; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            ocf_exit_reason "$cmd command not found"
+            return "$OCF_ERR_INSTALLED"
+        fi
+    done
+
+    return "$OCF_SUCCESS"
+}
+
+zpool_monitor() {
+    zpool list -H -o name "$OCF_RESKEY_pool" >/dev/null 2>&1
+}
+
+zpool_start() {
+    zpool_validate || return $?
+
+    if zpool_monitor; then
+        return "$OCF_SUCCESS"
+    fi
+
+    if ! zpool import "$OCF_RESKEY_pool"; then
+        ocf_exit_reason "failed to import pool $OCF_RESKEY_pool without force"
+        return "$OCF_ERR_GENERIC"
+    fi
+
+    zpool_monitor
+}
+
+zpool_stop() {
+    zpool_validate || return $?
+
+    if ! zpool_monitor; then
+        return "$OCF_SUCCESS"
+    fi
+
+    if ! zpool export "$OCF_RESKEY_pool"; then
+        ocf_exit_reason "failed to export pool $OCF_RESKEY_pool"
+        return "$OCF_ERR_GENERIC"
+    fi
+
+    if zpool_monitor; then
+        ocf_exit_reason "pool $OCF_RESKEY_pool is still imported after export"
+        return "$OCF_ERR_GENERIC"
+    fi
+
+    return "$OCF_SUCCESS"
+}
+
+case "$1" in
+    meta-data)
+        meta_data
+        exit "$OCF_SUCCESS"
+        ;;
+    usage|help)
+        zpool_usage
+        exit "$OCF_SUCCESS"
+        ;;
+    validate-all)
+        zpool_validate
+        exit $?
+        ;;
+    monitor)
+        zpool_validate || exit $?
+        if zpool_monitor; then
+            exit "$OCF_SUCCESS"
+        fi
+        exit "$OCF_NOT_RUNNING"
+        ;;
+    start)
+        zpool_start
+        exit $?
+        ;;
+    stop)
+        zpool_stop
+        exit $?
+        ;;
+    *)
+        zpool_usage
+        exit "$OCF_ERR_UNIMPLEMENTED"
+        ;;
+esac
+

@@ -1,0 +1,7 @@
+---
+- name: Validate HA cluster
+  hosts: ha_cluster
+  become: true
+  roles:
+    - validation
+

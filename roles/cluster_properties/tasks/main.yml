@@ -1,0 +1,16 @@
+---
+- name: Configure STONITH property
+  ansible.builtin.command: "pcs property set stonith-enabled={{ cluster_stonith_enabled | ternary('true', 'false') }}"
+  run_once: true
+  changed_when: true
+
+- name: Configure no-quorum-policy
+  ansible.builtin.command: "pcs property set no-quorum-policy={{ cluster_no_quorum_policy }}"
+  run_once: true
+  changed_when: true
+
+- name: Configure default resource stickiness
+  ansible.builtin.command: "pcs resource defaults update resource-stickiness={{ cluster_resource_stickiness }}"
+  run_once: true
+  changed_when: true
+

@@ -1,0 +1,7 @@
+---
+- name: Install HA cluster packages
+  hosts: ha_cluster
+  become: true
+  roles:
+    - cluster_install
+

@@ -1,0 +1,7 @@
+---
+- name: Configure Pacemaker constraints
+  hosts: ha_cluster
+  become: true
+  roles:
+    - constraints
+

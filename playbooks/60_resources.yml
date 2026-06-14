@@ -1,0 +1,7 @@
+---
+- name: Configure Pacemaker resources
+  hosts: ha_cluster
+  become: true
+  roles:
+    - resources
+

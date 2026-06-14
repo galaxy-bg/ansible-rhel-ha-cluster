@@ -1,0 +1,11 @@
+---
+- import_playbook: playbooks/00_common.yml
+- import_playbook: playbooks/10_cluster_install.yml
+- import_playbook: playbooks/20_cluster_setup.yml
+- import_playbook: playbooks/30_cluster_properties.yml
+- import_playbook: playbooks/40_fencing.yml
+- import_playbook: playbooks/50_storage.yml
+- import_playbook: playbooks/60_resources.yml
+- import_playbook: playbooks/70_constraints.yml
+- import_playbook: playbooks/90_validation.yml
+

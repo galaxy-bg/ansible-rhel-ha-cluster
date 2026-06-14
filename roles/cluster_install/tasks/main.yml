@@ -1,0 +1,43 @@
+---
+- name: Enable required RHEL repositories
+  community.general.rhsm_repository:
+    name: "{{ item }}"
+    state: enabled
+  loop: "{{ rhel_repositories }}"
+  failed_when: false
+
+- name: Install EPEL release
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+
+- name: Install OpenZFS repository
+  ansible.builtin.dnf:
+    name: https://zfsonlinux.org/epel/zfs-release-2-3.el8.noarch.rpm
+    state: present
+    disable_gpg_check: true
+
+- name: Install cluster and storage packages
+  ansible.builtin.dnf:
+    name: "{{ cluster_packages }}"
+    state: present
+
+- name: Enable pcsd
+  ansible.builtin.service:
+    name: pcsd
+    enabled: true
+    state: started
+
+- name: Enable iscsid
+  ansible.builtin.service:
+    name: iscsid
+    enabled: true
+    state: started
+
+- name: Enable multipathd
+  ansible.builtin.service:
+    name: multipathd
+    enabled: true
+    state: started
+  failed_when: false
+
