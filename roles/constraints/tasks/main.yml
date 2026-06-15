@@ -1,7 +1,15 @@
 ---
+- name: Read existing Pacemaker constraints
+  ansible.builtin.command: pcs constraint config
+  register: pcs_constraint_config
+  changed_when: false
+  failed_when: false
+  run_once: true
+
 - name: Add colocation constraint for VIP with ZFS pool
   ansible.builtin.command: "pcs constraint colocation add {{ vip_resource_name }} with zfs-pool INFINITY"
   run_once: true
+  when: vip_resource_name not in pcs_constraint_config.stdout or 'zfs-pool' not in pcs_constraint_config.stdout or 'INFINITY' not in pcs_constraint_config.stdout
   register: colocation_add
   changed_when: colocation_add.rc == 0
   failed_when:
@@ -12,10 +20,10 @@
 - name: Add order constraint for ZFS before VIP
   ansible.builtin.command: "pcs constraint order start zfs-pool then {{ vip_resource_name }}"
   run_once: true
+  when: "'start zfs-pool then start ' ~ vip_resource_name not in pcs_constraint_config.stdout and 'zfs-pool then ' ~ vip_resource_name not in pcs_constraint_config.stdout"
   register: order_add
   changed_when: order_add.rc == 0
   failed_when:
     - order_add.rc != 0
     - "'duplicate' not in order_add.stderr | lower"
     - "'already exists' not in order_add.stderr | lower"
-

@@ -8,7 +8,7 @@
 - name: Discover iSCSI target
   ansible.builtin.command: "iscsiadm -m discovery -t sendtargets -p {{ truenas_iscsi_portal }}"
   register: iscsi_discovery
-  changed_when: "'{{ iscsi_target_iqn }}' in iscsi_discovery.stdout"
+  changed_when: false
 
 - name: Login to iSCSI target
   ansible.builtin.command: >
@@ -31,7 +31,7 @@
     --op update
     -n node.startup
     -v automatic
-  changed_when: true
+  changed_when: false
 
 - name: Wait for shared disk by-id path
   ansible.builtin.stat:
@@ -82,4 +82,3 @@
   failed_when:
     - zpool_export.rc != 0
     - "'no such pool' not in zpool_export.stderr | lower"
-

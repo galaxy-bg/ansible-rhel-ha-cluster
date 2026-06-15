@@ -32,11 +32,10 @@
   ansible.builtin.command: pcs cluster start --all
   run_once: true
   register: cluster_start
-  changed_when: "'Starting Cluster' in cluster_start.stdout or cluster_start.rc == 0"
+  changed_when: "'Starting Cluster' in cluster_start.stdout"
 
 - name: Enable cluster on all nodes
   ansible.builtin.command: pcs cluster enable --all
   run_once: true
   register: cluster_enable
-  changed_when: "'Enabled' in cluster_enable.stdout or cluster_enable.rc == 0"
-
+  changed_when: "'Enabled' in cluster_enable.stdout"

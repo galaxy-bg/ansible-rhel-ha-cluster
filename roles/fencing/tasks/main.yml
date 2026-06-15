@@ -11,6 +11,14 @@
   run_once: true
   when: vmware_fencing.enabled | bool
 
+- name: Read existing STONITH resources
+  ansible.builtin.command: pcs stonith config
+  register: pcs_stonith_config
+  changed_when: false
+  failed_when: false
+  run_once: true
+  when: vmware_fencing.enabled | bool
+
 - name: Configure VMware fencing resources
   ansible.builtin.command: >
     pcs stonith create fence-{{ item.name }}
@@ -30,7 +38,9 @@
   no_log: true
   loop: "{{ cluster_nodes }}"
   run_once: true
-  when: vmware_fencing.enabled | bool
+  when:
+    - vmware_fencing.enabled | bool
+    - "'fence-' ~ item.name not in pcs_stonith_config.stdout"
   register: vmware_fence_create
   changed_when: vmware_fence_create.rc == 0
   failed_when:
@@ -40,6 +50,7 @@
 - name: Enable STONITH after fencing resources are present
   ansible.builtin.command: pcs property set stonith-enabled=true
   run_once: true
-  when: vmware_fencing.enabled | bool
-  changed_when: true
-
+  when:
+    - vmware_fencing.enabled | bool
+    - not (cluster_stonith_enabled | bool)
+  changed_when: false

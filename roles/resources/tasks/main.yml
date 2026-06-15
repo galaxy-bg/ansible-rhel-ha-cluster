@@ -20,6 +20,13 @@
   changed_when: false
   run_once: true
 
+- name: Read existing Pacemaker resources
+  ansible.builtin.command: pcs resource config
+  register: pcs_resource_config
+  changed_when: false
+  failed_when: false
+  run_once: true
+
 - name: Create ZFS pool resource
   ansible.builtin.command: >
     pcs resource create zfs-pool
@@ -29,6 +36,7 @@
     op stop timeout=120s
     op monitor interval=30s timeout=20s
   run_once: true
+  when: "'Resource: zfs-pool' not in pcs_resource_config.stdout and ' zfs-pool ' not in pcs_resource_config.stdout"
   register: zfs_resource_create
   changed_when: zfs_resource_create.rc == 0
   failed_when:
@@ -43,9 +51,9 @@
     cidr_netmask={{ vip_cidr_netmask }}
     op monitor interval=30s
   run_once: true
+  when: "'Resource: ' ~ vip_resource_name not in pcs_resource_config.stdout and ' ' ~ vip_resource_name ~ ' ' not in pcs_resource_config.stdout"
   register: vip_resource_create
   changed_when: vip_resource_create.rc == 0
   failed_when:
     - vip_resource_create.rc != 0
     - "'already exists' not in vip_resource_create.stderr"
-
