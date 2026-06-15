@@ -17,6 +17,8 @@ Bu dosya 2026-06-15 tarihinde hazirlanan mevcut lab degerlerini ve ilk implement
 | ens35 | Corosync Private |
 | ens36 | iSCSI |
 
+Pacemaker node names public/mgmt network uzerinden cozulur; Corosync heartbeat icin `pcs cluster setup` komutunda node'lara ayrica `addr=<corosync_ip>` verilir. Bu sayede ring0 trafiği `172.12.2.x` private VLAN uzerinden akar.
+
 ## TrueNAS
 
 | Alan | Deger |

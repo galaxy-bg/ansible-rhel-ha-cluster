@@ -23,7 +23,9 @@
 - name: Create cluster
   ansible.builtin.command: >
     pcs cluster setup {{ cluster_name }}
-    {{ cluster_nodes | map(attribute='name') | join(' ') }}
+    {% for node in cluster_nodes %}
+    {{ node.name }} addr={{ node.corosync_ip }}
+    {% endfor %}
     --force
   run_once: true
   when: pcs_status.rc != 0
