@@ -3,36 +3,36 @@ cluster_name: frs-cluster
 cluster_domain: kdx.local
 
 cluster_nodes:
-  - name: frs-sds-n1
-    fqdn: frs-sds-n1.kdx.local
-    public_ip: 172.12.2.77
-    corosync_ip: 10.10.10.77
-    iscsi_ip: 10.20.20.77
-    vmware_plug: frs-sds-n1
-  - name: frs-sds-n2
-    fqdn: frs-sds-n2.kdx.local
-    public_ip: 172.12.2.78
-    corosync_ip: 10.10.10.78
-    iscsi_ip: 10.20.20.78
-    vmware_plug: frs-sds-n2
+  - name: sds-frs-n01
+    fqdn: sds-frs-n01.kdx.local
+    public_ip: 192.168.88.118
+    corosync_ip: 172.12.2.84
+    iscsi_ip: 172.22.2.35
+    vmware_plug: sds-frs-n01
+  - name: sds-frs-n02
+    fqdn: sds-frs-n02.kdx.local
+    public_ip: 192.168.88.119
+    corosync_ip: 172.12.2.85
+    iscsi_ip: 172.22.2.36
+    vmware_plug: sds-frs-n02
 
-public_interface: ens192
-corosync_interface: ens224
-iscsi_interface: ens256
+public_interface: ens34
+corosync_interface: ens35
+iscsi_interface: ens36
 
 vip_resource_name: vip
-vip_address: 172.12.2.100
+vip_address: 192.168.88.120
 vip_cidr_netmask: 24
 
-truenas_iscsi_portal: 10.20.20.75
+truenas_iscsi_portal: 172.22.2.33
 truenas_iscsi_port: 3260
 iscsi_target_iqn: iqn.2005-10.org.freenas.ctl:frs-share
-zfs_disk_by_id: /dev/disk/by-id/scsi-STrueNAS_iSCSI_Disk_64118f6612f5dc5
+zfs_disk_by_id: /dev/disk/by-id/scsi-STrueNAS_iSCSI_Disk_REPLACE_ME
 zfs_pool_name: frs_pool
 zfs_ashift: 14
 zfs_zvols:
   - name: testlun
-    size: 50G
+    size: 200G
 
 cluster_stonith_enabled: true
 cluster_no_quorum_policy: ignore
@@ -73,4 +73,3 @@ cluster_packages:
   - corosync
   - resource-agents
   - fence-agents-all
-

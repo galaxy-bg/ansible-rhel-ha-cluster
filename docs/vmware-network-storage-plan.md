@@ -8,13 +8,13 @@ Her RHEL 8.10 node icin:
 
 | NIC | Network | Ornek Interface | Kullanim |
 | --- | --- | --- | --- |
-| vNIC1 | Public/Mgmt | `ens192` | SSH, Ansible, VIP, client, vCenter API |
-| vNIC2 | Corosync | `ens224` | Pacemaker/Corosync heartbeat |
-| vNIC3 | iSCSI | `ens256` | TrueNAS iSCSI LUN |
+| vNIC1 | Public/Mgmt | `ens34` | SSH, Ansible, VIP, client, vCenter API |
+| vNIC2 | Corosync | `ens35` | Pacemaker/Corosync heartbeat |
+| vNIC3 | iSCSI | `ens36` | TrueNAS iSCSI LUN |
 
 ## vSphere Ayarlari
 
-- VM isimleri inventory ile ayni tutulur: `frs-sds-n1`, `frs-sds-n2`.
+- VM isimleri inventory ile ayni tutulur: `sds-frs-n01`, `sds-frs-n02`.
 - Mumkunse iki VM farkli ESXi hostlarda calistirilir.
 - DRS varsa anti-affinity rule eklenir.
 - VMware Tools kurulu ve calisir durumda olmalidir.
@@ -54,4 +54,3 @@ Multipath icin ikinci storage network eklenir:
 | iSCSI-B | Path 2 |
 
 Bu fazda `multipath.conf`, iki portal discovery ve path failover testleri eklenecek.
-

@@ -36,10 +36,10 @@ Ornek IP plani:
 
 | Host | Public/Mgmt | Corosync | iSCSI |
 | --- | --- | --- | --- |
-| frs-sds-n1 | 172.12.2.77 | 10.10.10.77 | 10.20.20.77 |
-| frs-sds-n2 | 172.12.2.78 | 10.10.10.78 | 10.20.20.78 |
-| VIP | 172.12.2.100 | - | - |
-| TrueNAS | - | - | 10.20.20.75 |
+| sds-frs-n01 | 192.168.88.118 | 172.12.2.84 | 172.22.2.35 |
+| sds-frs-n02 | 192.168.88.119 | 172.12.2.85 | 172.22.2.36 |
+| VIP | 192.168.88.120 | - | - |
+| TrueNAS | - | - | 172.22.2.33 |
 
 Sonraki fazda iSCSI icin ikinci path eklenip multipath tasarimi genisletilebilir.
 
@@ -55,6 +55,8 @@ Best practice'e yakin lab icin:
 - VM adlari sabit tutulmali veya `plug` alaninda VM UUID kullanilmali.
 
 Detayli hazirlik listesi: [docs/vmware-network-storage-plan.md](docs/vmware-network-storage-plan.md)
+
+Mevcut lab degerleri ve implementation notlari: [docs/current-lab-implementation.md](docs/current-lab-implementation.md)
 
 ## TrueNAS Hazirliklari
 
