@@ -38,6 +38,18 @@ VMware fencing password, vault icinde
 hacluster password, vault icinde
 ```
 
+Secret degerler su path altinda tutulur:
+
+```bash
+inventory/group_vars/ha_cluster/vault.yml
+```
+
+Bu dosya `.gitignore` kapsamindadir. Ornek dosya:
+
+```bash
+inventory/group_vars/ha_cluster/vault.example.yml
+```
+
 `zfs_disk_by_id`, iSCSI login sonrasi su komutla dogrulanir:
 
 ```bash
@@ -74,4 +86,3 @@ ansible-playbook -i inventory/lab.ini playbooks/60_resources.yml --ask-vault-pas
 ansible-playbook -i inventory/lab.ini playbooks/70_constraints.yml --ask-vault-pass
 ansible-playbook -i inventory/lab.ini playbooks/90_validation.yml --ask-vault-pass
 ```
-

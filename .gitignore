@@ -1,4 +1,5 @@
 *.retry
 .DS_Store
 inventory/group_vars/vault.yml
+inventory/group_vars/ha_cluster/vault.yml
 *.log

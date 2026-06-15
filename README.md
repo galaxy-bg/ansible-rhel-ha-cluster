@@ -71,7 +71,7 @@ Degiskenleri once duzenleyin:
 
 ```bash
 vim inventory/lab.ini
-vim inventory/group_vars/ha_cluster.yml
+vim inventory/group_vars/ha_cluster/main.yml
 ```
 
 Vault dosyasi olusturun:
