@@ -59,9 +59,16 @@ rhel_repositories:
   - codeready-builder-for-rhel-8-x86_64-rpms
   - rhel-8-for-x86_64-highavailability-rpms
 
+epel_release_url: https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+zfs_release_url: https://zfsonlinux.org/epel/zfs-release-2-3.el8.noarch.rpm
+
 cluster_packages:
+  - kernel
+  - kernel-core
   - kernel-devel
   - kernel-headers
+  - kernel-modules
+  - kernel-modules-extra
   - gcc
   - make
   - dkms

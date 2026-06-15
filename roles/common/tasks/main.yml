@@ -28,4 +28,4 @@
 - name: Warn if Secure Boot is enabled
   ansible.builtin.debug:
     msg: "Secure Boot enabled gorunuyor. OpenZFS DKMS kurulumu icin disable edilmesi onerilir."
-  when: secure_boot_state.rc == 0 and "'enabled' in (secure_boot_state.stdout | lower)"
+  when: secure_boot_state.rc == 0 and "'secureboot enabled' in (secure_boot_state.stdout | lower)"

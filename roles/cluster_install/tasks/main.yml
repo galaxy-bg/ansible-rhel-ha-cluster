@@ -6,14 +6,15 @@
   loop: "{{ rhel_repositories }}"
   failed_when: false
 
-- name: Install EPEL release
+- name: Install EPEL release from upstream RPM
   ansible.builtin.dnf:
-    name: epel-release
+    name: "{{ epel_release_url }}"
     state: present
+    disable_gpg_check: true
 
 - name: Install OpenZFS repository
   ansible.builtin.dnf:
-    name: https://zfsonlinux.org/epel/zfs-release-2-3.el8.noarch.rpm
+    name: "{{ zfs_release_url }}"
     state: present
     disable_gpg_check: true
 
@@ -34,10 +35,18 @@
     enabled: true
     state: started
 
+- name: Check multipath configuration
+  ansible.builtin.stat:
+    path: /etc/multipath.conf
+  register: multipath_conf
+
+- name: Create default multipath configuration
+  ansible.builtin.command: mpathconf --enable --with_multipathd y
+  when: not multipath_conf.stat.exists
+
 - name: Enable multipathd
   ansible.builtin.service:
     name: multipathd
     enabled: true
     state: started
   failed_when: false
-
