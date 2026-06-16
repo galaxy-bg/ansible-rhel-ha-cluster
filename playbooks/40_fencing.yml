@@ -15,6 +15,22 @@
       run_once: true
       when: vmware_fencing.enabled | bool
 
+    - name: Validate VMware fencing variables
+      ansible.builtin.assert:
+        that:
+          - vmware_fencing.vcenter is defined
+          - vmware_fencing.vcenter | length > 0
+          - vmware_fencing.vcenter != 'vcsa.kdx.local'
+          - vmware_fencing.username is defined
+          - vmware_fencing.username | length > 0
+          - vmware_fencing.password is defined
+          - vmware_fencing.password | length > 0
+          - vmware_fencing.password != 'ChangeMe'
+        fail_msg: "VMware fencing icin vcenter/username/password gercek degerlerle guncellenmeli."
+        quiet: true
+      run_once: true
+      when: vmware_fencing.enabled | bool
+
     - name: Read existing STONITH resources
       ansible.builtin.command: pcs stonith config
       register: pcs_stonith_config
@@ -27,14 +43,13 @@
       ansible.builtin.command: >
         pcs stonith create fence-{{ item.name }}
         {{ vmware_fencing.agent }}
-        ipaddr={{ vmware_fencing.vcenter }}
-        login={{ vmware_fencing.username }}
-        passwd={{ vmware_fencing.password }}
+        ip={{ vmware_fencing.vcenter }}
+        username={{ vmware_fencing.username }}
+        password={{ vmware_fencing.password }}
         plug={{ item.vmware_plug }}
         pcmk_host_list={{ item.name }}
         pcmk_host_check={{ vmware_fencing.pcmk_host_check }}
         ssl_insecure={{ vmware_fencing.ssl_insecure | ternary('1', '0') }}
-        action={{ vmware_fencing.action }}
         power_timeout={{ vmware_fencing.power_timeout }}
         shell_timeout={{ vmware_fencing.shell_timeout }}
         login_timeout={{ vmware_fencing.login_timeout }}

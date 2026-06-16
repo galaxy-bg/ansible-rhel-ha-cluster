@@ -45,7 +45,6 @@ vmware_fencing:
   username: svc_pacemaker_fence@vsphere.local
   password: "{{ vault_vmware_fencing_password }}"
   ssl_insecure: true
-  action: reboot
   power_timeout: 60
   shell_timeout: 10
   login_timeout: 10
