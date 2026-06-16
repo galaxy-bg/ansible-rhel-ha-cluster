@@ -2,6 +2,59 @@
 - name: Configure STONITH fencing
   hosts: ha_cluster
   become: true
-  roles:
-    - fencing
+  tasks:
+    - name: Skip fencing when disabled
+      ansible.builtin.debug:
+        msg: "VMware fencing disabled. cluster_stonith_enabled={{ cluster_stonith_enabled }}"
+      when: not (vmware_fencing.enabled | bool)
 
+    - name: Verify VMware fence agent exists
+      ansible.builtin.command: "pcs stonith describe {{ vmware_fencing.agent }}"
+      register: vmware_fence_agent
+      changed_when: false
+      run_once: true
+      when: vmware_fencing.enabled | bool
+
+    - name: Read existing STONITH resources
+      ansible.builtin.command: pcs stonith config
+      register: pcs_stonith_config
+      changed_when: false
+      failed_when: false
+      run_once: true
+      when: vmware_fencing.enabled | bool
+
+    - name: Configure VMware fencing resources
+      ansible.builtin.command: >
+        pcs stonith create fence-{{ item.name }}
+        {{ vmware_fencing.agent }}
+        ipaddr={{ vmware_fencing.vcenter }}
+        login={{ vmware_fencing.username }}
+        passwd={{ vmware_fencing.password }}
+        plug={{ item.vmware_plug }}
+        pcmk_host_list={{ item.name }}
+        pcmk_host_check={{ vmware_fencing.pcmk_host_check }}
+        ssl_insecure={{ vmware_fencing.ssl_insecure | ternary('1', '0') }}
+        action={{ vmware_fencing.action }}
+        power_timeout={{ vmware_fencing.power_timeout }}
+        shell_timeout={{ vmware_fencing.shell_timeout }}
+        login_timeout={{ vmware_fencing.login_timeout }}
+        op monitor interval=60s
+      no_log: true
+      loop: "{{ cluster_nodes }}"
+      run_once: true
+      when:
+        - vmware_fencing.enabled | bool
+        - "'fence-' ~ item.name not in pcs_stonith_config.stdout"
+      register: vmware_fence_create
+      changed_when: vmware_fence_create.rc == 0
+      failed_when:
+        - vmware_fence_create.rc != 0
+        - "'already exists' not in vmware_fence_create.stderr"
+
+    - name: Enable STONITH after fencing resources are present
+      ansible.builtin.command: pcs property set stonith-enabled=true
+      run_once: true
+      when:
+        - vmware_fencing.enabled | bool
+        - not (cluster_stonith_enabled | bool)
+      changed_when: false

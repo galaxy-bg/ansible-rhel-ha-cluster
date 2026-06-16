@@ -2,6 +2,46 @@
 - name: Configure Pacemaker cluster
   hosts: ha_cluster
   become: true
-  roles:
-    - cluster_setup
+  tasks:
+    - name: Set hacluster password
+      ansible.builtin.user:
+        name: hacluster
+        password: "{{ hacluster_password | password_hash('sha512') }}"
 
+    - name: Check cluster status
+      ansible.builtin.command: pcs status
+      register: pcs_status
+      changed_when: false
+      failed_when: false
+      run_once: true
+
+    - name: Authenticate cluster nodes
+      ansible.builtin.command: >
+        pcs host auth
+        {{ cluster_nodes | map(attribute='name') | join(' ') }}
+        -u hacluster -p {{ hacluster_password }}
+      no_log: true
+      run_once: true
+      when: pcs_status.rc != 0
+
+    - name: Create cluster
+      ansible.builtin.command: >
+        pcs cluster setup {{ cluster_name }}
+        {% for node in cluster_nodes %}
+        {{ node.name }} addr={{ node.corosync_ip }}
+        {% endfor %}
+        --force
+      run_once: true
+      when: pcs_status.rc != 0
+
+    - name: Start cluster on all nodes
+      ansible.builtin.command: pcs cluster start --all
+      run_once: true
+      register: cluster_start
+      changed_when: "'Starting Cluster' in cluster_start.stdout"
+
+    - name: Enable cluster on all nodes
+      ansible.builtin.command: pcs cluster enable --all
+      run_once: true
+      register: cluster_enable
+      changed_when: "'Enabled' in cluster_enable.stdout"

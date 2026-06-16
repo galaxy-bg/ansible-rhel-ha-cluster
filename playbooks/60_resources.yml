@@ -2,6 +2,62 @@
 - name: Configure Pacemaker resources
   hosts: ha_cluster
   become: true
-  roles:
-    - resources
+  tasks:
+    - name: Create OCF vendor directory
+      ansible.builtin.file:
+        path: /usr/lib/ocf/resource.d/kdx
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
 
+    - name: Deploy ZFS pool OCF agent
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../files/ocf/zpool-ha"
+        dest: /usr/lib/ocf/resource.d/kdx/zpool-ha
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Validate OCF agent metadata
+      ansible.builtin.command: pcs resource describe ocf:kdx:zpool-ha
+      changed_when: false
+      run_once: true
+
+    - name: Read existing Pacemaker resources
+      ansible.builtin.command: pcs resource config
+      register: pcs_resource_config
+      changed_when: false
+      failed_when: false
+      run_once: true
+
+    - name: Create ZFS pool resource
+      ansible.builtin.command: >
+        pcs resource create zfs-pool
+        ocf:kdx:zpool-ha
+        pool={{ zfs_pool_name }}
+        op start timeout=60s
+        op stop timeout=120s
+        op monitor interval=30s timeout=20s
+      run_once: true
+      when: "'Resource: zfs-pool' not in pcs_resource_config.stdout and ' zfs-pool ' not in pcs_resource_config.stdout"
+      register: zfs_resource_create
+      changed_when: zfs_resource_create.rc == 0
+      failed_when:
+        - zfs_resource_create.rc != 0
+        - "'already exists' not in zfs_resource_create.stderr"
+
+    - name: Create VIP resource
+      ansible.builtin.command: >
+        pcs resource create {{ vip_resource_name }}
+        ocf:heartbeat:IPaddr2
+        ip={{ vip_address }}
+        cidr_netmask={{ vip_cidr_netmask }}
+        op monitor interval=30s
+      run_once: true
+      when: "'Resource: ' ~ vip_resource_name not in pcs_resource_config.stdout and ' ' ~ vip_resource_name ~ ' ' not in pcs_resource_config.stdout"
+      register: vip_resource_create
+      changed_when: vip_resource_create.rc == 0
+      failed_when:
+        - vip_resource_create.rc != 0
+        - "'already exists' not in vip_resource_create.stderr"

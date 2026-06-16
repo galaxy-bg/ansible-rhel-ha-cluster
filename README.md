@@ -28,9 +28,9 @@ Ilk fazda her VM icin 3 NIC kullanilir.
 
 | Network | Ornek Interface | Kullanim |
 | --- | --- | --- |
-| Public / Management | `ens192` | SSH, Ansible, pcs, VIP, client erisimi, vCenter erisimi |
-| Cluster / Corosync | `ens224` | Node-to-node heartbeat |
-| Storage / iSCSI | `ens256` | TrueNAS iSCSI portal erisimi |
+| Public / Management | `ens34` | SSH, Ansible, pcs, VIP, client erisimi, vCenter erisimi |
+| Cluster / Corosync | `ens35` | Node-to-node heartbeat |
+| Storage / iSCSI | `ens36` | TrueNAS iSCSI portal erisimi |
 
 Ornek IP plani:
 
@@ -47,7 +47,7 @@ Sonraki fazda iSCSI icin ikinci path eklenip multipath tasarimi genisletilebilir
 
 Best practice'e yakin lab icin:
 
-- `frs-sds-n1` ve `frs-sds-n2` VM'leri ayni ESXi host uzerinde tutulmamali.
+- `sds-frs-n01` ve `sds-frs-n02` VM'leri ayni ESXi host uzerinde tutulmamali.
 - vSphere DRS varsa anti-affinity rule eklenmeli.
 - Pacemaker fencing icin ayri servis hesabi acilmali.
 - Servis hesabina sadece ilgili iki VM icin power/status/reset yetkileri verilmeli.
@@ -77,7 +77,7 @@ vim inventory/group_vars/ha_cluster/main.yml
 Vault dosyasi olusturun:
 
 ```bash
-ansible-vault create inventory/group_vars/vault.yml
+ansible-vault create inventory/group_vars/ha_cluster/vault.yml
 ```
 
 Ornek icerik:
@@ -120,11 +120,11 @@ ansible-playbook -i inventory/lab.ini site.yml --ask-vault-pass
 
 ```bash
 pcs status --full
-pcs node standby frs-sds-n1
+pcs node standby sds-frs-n01
 pcs status --full
 zpool status
-pcs node unstandby frs-sds-n1
-pcs resource move zfs-pool frs-sds-n1
+pcs node unstandby sds-frs-n01
+pcs resource move zfs-pool sds-frs-n01
 pcs resource clear zfs-pool
 ```
 
