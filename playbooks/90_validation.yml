@@ -9,11 +9,76 @@
       changed_when: false
       run_once: true
 
+    - name: Validate cluster health
+      ansible.builtin.assert:
+        that:
+          - "'partition with quorum' in pcs_status_full.stdout"
+          - "'UNCLEAN' not in pcs_status_full.stdout"
+          - "'FAILED' not in pcs_status_full.stdout"
+          - "'Node ' ~ item.name ~ ' ' in pcs_status_full.stdout or item.name in pcs_status_full.stdout"
+        fail_msg: "Cluster health validation failed for {{ item.name }}."
+        quiet: true
+      loop: "{{ cluster_nodes }}"
+      run_once: true
+
+    - name: Show STONITH config
+      ansible.builtin.command: pcs stonith config
+      register: pcs_stonith_config
+      changed_when: false
+      run_once: true
+
+    - name: Show cluster properties
+      ansible.builtin.command: pcs property config
+      register: pcs_property_config
+      changed_when: false
+      run_once: true
+
+    - name: Validate STONITH resources
+      ansible.builtin.assert:
+        that:
+          - "'fence-' ~ item.name in pcs_stonith_config.stdout"
+          - item.vmware_plug in pcs_stonith_config.stdout
+          - "'stonith-enabled: true' in pcs_property_config.stdout"
+        fail_msg: "STONITH validation failed for {{ item.name }}."
+        quiet: true
+      loop: "{{ cluster_nodes }}"
+      run_once: true
+
+    - name: Show Pacemaker resource config
+      ansible.builtin.command: pcs resource config
+      register: pcs_resource_config
+      changed_when: false
+      run_once: true
+
+    - name: Validate resource group
+      ansible.builtin.assert:
+        that:
+          - "'Group: ' ~ resource_group_name in pcs_resource_config.stdout"
+          - "'Resource: zfs-pool' in pcs_resource_config.stdout"
+          - "'Resource: ' ~ vip_resource_name in pcs_resource_config.stdout"
+          - "'pool=' ~ zfs_pool_name in pcs_resource_config.stdout"
+          - "'ip=' ~ vip_address in pcs_resource_config.stdout"
+        fail_msg: "Resource group validation failed."
+        quiet: true
+      run_once: true
+      when: resource_group_enabled | bool
+
     - name: Show ZFS pool status
       ansible.builtin.command: zpool status
       register: zpool_status
       changed_when: false
       failed_when: false
+
+    - name: Check imported ZFS pool name
+      ansible.builtin.command: "zpool list -H -o name {{ zfs_pool_name }}"
+      register: zpool_imported
+      changed_when: false
+      failed_when: false
+
+    - name: Check VIP address on public interface
+      ansible.builtin.command: "ip -4 addr show dev {{ public_interface }}"
+      register: public_ip_addresses
+      changed_when: false
 
     - name: Show iSCSI sessions
       ansible.builtin.command: iscsiadm -m session
@@ -21,9 +86,55 @@
       changed_when: false
       failed_when: false
 
+    - name: Check shared disk by-id path
+      ansible.builtin.stat:
+        path: "{{ zfs_disk_by_id }}"
+      register: shared_disk_path
+
+    - name: Validate per-node storage visibility
+      ansible.builtin.assert:
+        that:
+          - shared_disk_path.stat.exists
+          - iscsi_target_iqn in isc_sessions.stdout
+          - truenas_iscsi_portal in isc_sessions.stdout
+        fail_msg: "Storage visibility validation failed on {{ inventory_hostname }}."
+        quiet: true
+
+    - name: Build imported pool node list
+      ansible.builtin.set_fact:
+        imported_pool_nodes: "{{ ansible_play_hosts_all | map('extract', hostvars) | selectattr('zpool_imported.rc', 'equalto', 0) | map(attribute='inventory_hostname') | list }}"
+      run_once: true
+
+    - name: Build VIP node list
+      ansible.builtin.set_fact:
+        vip_nodes: "{{ ansible_play_hosts_all | map('extract', hostvars) | selectattr('public_ip_addresses.stdout', 'search', vip_address) | map(attribute='inventory_hostname') | list }}"
+      run_once: true
+
+    - name: Validate active pool and VIP placement
+      ansible.builtin.assert:
+        that:
+          - imported_pool_nodes | length == 1
+          - vip_nodes | length == 1
+          - imported_pool_nodes[0] == vip_nodes[0]
+        fail_msg: "ZFS pool and VIP are not active on the same single node."
+        quiet: true
+      run_once: true
+
+    - name: Optional failover test is disabled
+      ansible.builtin.debug:
+        msg: "Failover test disabled. Set run_failover_test=true to enable standby/move validation."
+      run_once: true
+      when: not (run_failover_test | bool)
+
     - name: Print validation summary
       ansible.builtin.debug:
         msg:
+          - "Cluster OK: quorum present, nodes online"
+          - "STONITH OK: VMware fence resources configured"
+          - "Resource group OK: {{ resource_group_name }}"
+          - "Active node: {{ imported_pool_nodes[0] }}"
+          - "VIP node: {{ vip_nodes[0] }}"
           - "{{ pcs_status_full.stdout_lines | default([]) }}"
           - "{{ zpool_status.stdout_lines | default([]) }}"
           - "{{ isc_sessions.stdout_lines | default([]) }}"
+      run_once: true

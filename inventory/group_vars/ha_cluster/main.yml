@@ -39,6 +39,8 @@ zfs_zvols:
 cluster_stonith_enabled: true
 cluster_no_quorum_policy: ignore
 cluster_resource_stickiness: 100
+run_failover_test: false
+failover_test_node: sds-frs-n01
 
 vmware_fencing:
   enabled: true
