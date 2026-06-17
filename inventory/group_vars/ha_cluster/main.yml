@@ -27,12 +27,12 @@ vip_cidr_netmask: 24
 truenas_iscsi_portal: 172.22.2.33
 truenas_iscsi_port: 3260
 iscsi_target_iqn: iqn.2005-10.org.freenas.ctl:frs-share
-zfs_disk_by_id: /dev/disk/by-id/scsi-STrueNAS_iSCSI_Disk_REPLACE_ME
+zfs_disk_by_id: /dev/disk/by-id/scsi-STrueNAS_iSCSI_Disk_64118f6612f5dc5
 zfs_pool_name: frs_pool
 zfs_ashift: 14
 zfs_zvols:
   - name: testlun
-    size: 200G
+    size: 50G
 
 cluster_stonith_enabled: true
 cluster_no_quorum_policy: ignore

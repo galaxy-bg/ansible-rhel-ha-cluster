@@ -57,6 +57,14 @@
       changed_when: false
       failed_when: false
 
+    - name: Import existing ZFS pool on first node only
+      ansible.builtin.command: "zpool import {{ zfs_pool_name }}"
+      changed_when: false
+      when:
+        - inventory_hostname == ansible_play_hosts_all[0]
+        - zpool_list.rc != 0
+        - zfs_pool_name in zpool_importable.stdout
+
     - name: Create ZFS pool on first node only
       ansible.builtin.command: >
         zpool create -f
@@ -82,7 +90,7 @@
       ansible.builtin.command: "zpool export {{ zfs_pool_name }}"
       when: inventory_hostname == ansible_play_hosts_all[0]
       register: zpool_export
-      changed_when: zpool_export.rc == 0
+      changed_when: false
       failed_when:
         - zpool_export.rc != 0
         - "'no such pool' not in zpool_export.stderr | lower"
