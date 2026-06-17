@@ -60,6 +60,8 @@ Mevcut lab degerleri ve implementation notlari: [docs/current-lab-implementation
 
 Operasyon, troubleshooting ve failover runbook: [docs/operations-runbook.md](docs/operations-runbook.md)
 
+Manuel kurulum kaynak MOP: [docs/manual-rhel8-zfs-pacemaker-sds-ha-mop.md](docs/manual-rhel8-zfs-pacemaker-sds-ha-mop.md)
+
 ## TrueNAS Hazirliklari
 
 - iSCSI portal Storage network uzerinde olmalidir.
