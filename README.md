@@ -58,6 +58,8 @@ Detayli hazirlik listesi: [docs/vmware-network-storage-plan.md](docs/vmware-netw
 
 Mevcut lab degerleri ve implementation notlari: [docs/current-lab-implementation.md](docs/current-lab-implementation.md)
 
+Operasyon, troubleshooting ve failover runbook: [docs/operations-runbook.md](docs/operations-runbook.md)
+
 ## TrueNAS Hazirliklari
 
 - iSCSI portal Storage network uzerinde olmalidir.
@@ -119,14 +121,6 @@ ansible-playbook -i inventory/lab.ini site.yml --ask-vault-pass
 
 ## Failover Testleri
 
-```bash
-pcs status --full
-pcs node standby sds-frs-n01
-pcs status --full
-zpool status
-pcs node unstandby sds-frs-n01
-pcs resource move zfs-pool sds-frs-n01
-pcs resource clear zfs-pool
-```
+Detayli ad-hoc Ansible komutlari icin [docs/operations-runbook.md](docs/operations-runbook.md) dosyasina bakiniz.
 
 Fencing testi once kontrollu ve bakimli lab ortaminda yapilmalidir.
