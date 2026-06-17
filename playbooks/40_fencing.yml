@@ -5,8 +5,11 @@
   tasks:
     - name: Skip fencing when disabled
       ansible.builtin.debug:
-        msg: "VMware fencing disabled. cluster_stonith_enabled={{ cluster_stonith_enabled }}"
-      when: not (vmware_fencing.enabled | bool)
+        msg: "All fencing profiles disabled. cluster_stonith_enabled={{ cluster_stonith_enabled }}"
+      when:
+        - not (vmware_fencing.enabled | bool)
+        - not (hpe_ilo_fencing.enabled | bool)
+        - not (redfish_fencing.enabled | bool)
 
     - name: Verify VMware fence agent exists
       ansible.builtin.command: "pcs stonith describe {{ vmware_fencing.agent }}"
@@ -66,10 +69,129 @@
         - vmware_fence_create.rc != 0
         - "'already exists' not in vmware_fence_create.stderr"
 
-    - name: Enable STONITH after fencing resources are present
+    - name: Enable STONITH when fencing is configured
       ansible.builtin.command: pcs property set stonith-enabled=true
       run_once: true
       when:
-        - vmware_fencing.enabled | bool
+        - (vmware_fencing.enabled | bool) or (hpe_ilo_fencing.enabled | bool) or (redfish_fencing.enabled | bool)
         - not (cluster_stonith_enabled | bool)
       changed_when: false
+
+    - name: Verify HPE iLO IPMI fence agent exists
+      ansible.builtin.command: "pcs stonith describe {{ hpe_ilo_fencing.agent }}"
+      register: hpe_ilo_fence_agent
+      changed_when: false
+      run_once: true
+      when: hpe_ilo_fencing.enabled | bool
+
+    - name: Validate HPE iLO IPMI fencing variables
+      ansible.builtin.assert:
+        that:
+          - hpe_ilo_fencing.username is defined
+          - hpe_ilo_fencing.username | length > 0
+          - hpe_ilo_fencing.password is defined
+          - hpe_ilo_fencing.password | length > 0
+          - hpe_ilo_fencing.password != 'ChangeMe'
+          - hpe_ilo_fencing.nodes[item.name].bmc_ip is defined
+          - hpe_ilo_fencing.nodes[item.name].bmc_ip | length > 0
+          - hpe_ilo_fencing.nodes[item.name].bmc_ip != '192.168.88.0'
+        fail_msg: "HPE iLO IPMI fencing icin username/password ve node bmc_ip degerleri guncellenmeli."
+        quiet: true
+      loop: "{{ cluster_nodes }}"
+      run_once: true
+      when: hpe_ilo_fencing.enabled | bool
+
+    - name: Read existing STONITH resources for HPE iLO IPMI
+      ansible.builtin.command: pcs stonith config
+      register: pcs_stonith_config_hpe_ilo
+      changed_when: false
+      failed_when: false
+      run_once: true
+      when: hpe_ilo_fencing.enabled | bool
+
+    - name: Configure HPE iLO IPMI fencing resources
+      ansible.builtin.command: >
+        pcs stonith create fence-{{ item.name }}
+        {{ hpe_ilo_fencing.agent }}
+        ip={{ hpe_ilo_fencing.nodes[item.name].bmc_ip }}
+        username={{ hpe_ilo_fencing.username }}
+        password={{ hpe_ilo_fencing.password }}
+        lanplus={{ hpe_ilo_fencing.lanplus | ternary('1', '0') }}
+        method={{ hpe_ilo_fencing.method }}
+        privlvl={{ hpe_ilo_fencing.privlvl }}
+        pcmk_host_list={{ item.name }}
+        pcmk_host_check={{ hpe_ilo_fencing.pcmk_host_check }}
+        power_timeout={{ hpe_ilo_fencing.power_timeout }}
+        shell_timeout={{ hpe_ilo_fencing.shell_timeout }}
+        login_timeout={{ hpe_ilo_fencing.login_timeout }}
+        op monitor interval=60s
+      no_log: true
+      loop: "{{ cluster_nodes }}"
+      run_once: true
+      when:
+        - hpe_ilo_fencing.enabled | bool
+        - "'fence-' ~ item.name not in pcs_stonith_config_hpe_ilo.stdout"
+      register: hpe_ilo_fence_create
+      changed_when: hpe_ilo_fence_create.rc == 0
+      failed_when:
+        - hpe_ilo_fence_create.rc != 0
+        - "'already exists' not in hpe_ilo_fence_create.stderr"
+
+    - name: Verify Redfish fence agent exists
+      ansible.builtin.command: "pcs stonith describe {{ redfish_fencing.agent }}"
+      register: redfish_fence_agent
+      changed_when: false
+      run_once: true
+      when: redfish_fencing.enabled | bool
+
+    - name: Validate Redfish fencing variables
+      ansible.builtin.assert:
+        that:
+          - redfish_fencing.username is defined
+          - redfish_fencing.username | length > 0
+          - redfish_fencing.password is defined
+          - redfish_fencing.password | length > 0
+          - redfish_fencing.password != 'ChangeMe'
+          - redfish_fencing.nodes[item.name].bmc_ip is defined
+          - redfish_fencing.nodes[item.name].bmc_ip | length > 0
+          - redfish_fencing.nodes[item.name].bmc_ip != '192.168.88.0'
+        fail_msg: "Redfish fencing icin username/password ve node bmc_ip degerleri guncellenmeli."
+        quiet: true
+      loop: "{{ cluster_nodes }}"
+      run_once: true
+      when: redfish_fencing.enabled | bool
+
+    - name: Read existing STONITH resources for Redfish
+      ansible.builtin.command: pcs stonith config
+      register: pcs_stonith_config_redfish
+      changed_when: false
+      failed_when: false
+      run_once: true
+      when: redfish_fencing.enabled | bool
+
+    - name: Configure Redfish fencing resources
+      ansible.builtin.command: >
+        pcs stonith create fence-{{ item.name }}
+        {{ redfish_fencing.agent }}
+        ip={{ redfish_fencing.nodes[item.name].bmc_ip }}
+        username={{ redfish_fencing.username }}
+        password={{ redfish_fencing.password }}
+        ssl_insecure={{ redfish_fencing.ssl_insecure | ternary('1', '0') }}
+        systems_uri={{ redfish_fencing.systems_uri }}
+        pcmk_host_list={{ item.name }}
+        pcmk_host_check={{ redfish_fencing.pcmk_host_check }}
+        power_timeout={{ redfish_fencing.power_timeout }}
+        shell_timeout={{ redfish_fencing.shell_timeout }}
+        login_timeout={{ redfish_fencing.login_timeout }}
+        op monitor interval=60s
+      no_log: true
+      loop: "{{ cluster_nodes }}"
+      run_once: true
+      when:
+        - redfish_fencing.enabled | bool
+        - "'fence-' ~ item.name not in pcs_stonith_config_redfish.stdout"
+      register: redfish_fence_create
+      changed_when: redfish_fence_create.rc == 0
+      failed_when:
+        - redfish_fence_create.rc != 0
+        - "'already exists' not in redfish_fence_create.stderr"

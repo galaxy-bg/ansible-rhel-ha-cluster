@@ -54,6 +54,41 @@ vmware_fencing:
   login_timeout: 10
   pcmk_host_check: static-list
 
+hpe_ilo_fencing:
+  enabled: false
+  agent: fence_ipmilan
+  username: Administrator
+  password: "{{ vault_hpe_ilo_fencing_password }}"
+  lanplus: true
+  method: onoff
+  privlvl: administrator
+  power_timeout: 60
+  shell_timeout: 10
+  login_timeout: 10
+  pcmk_host_check: static-list
+  nodes:
+    sds-frs-n01:
+      bmc_ip: 192.168.88.0
+    sds-frs-n02:
+      bmc_ip: 192.168.88.0
+
+redfish_fencing:
+  enabled: false
+  agent: fence_redfish
+  username: Administrator
+  password: "{{ vault_redfish_fencing_password }}"
+  ssl_insecure: true
+  systems_uri: /redfish/v1/Systems/1
+  power_timeout: 60
+  shell_timeout: 10
+  login_timeout: 10
+  pcmk_host_check: static-list
+  nodes:
+    sds-frs-n01:
+      bmc_ip: 192.168.88.0
+    sds-frs-n02:
+      bmc_ip: 192.168.88.0
+
 hacluster_password: "{{ vault_hacluster_password }}"
 
 rhel_repositories:

@@ -37,7 +37,7 @@
       ansible.builtin.assert:
         that:
           - "'fence-' ~ item.name in pcs_stonith_config.stdout"
-          - item.vmware_plug in pcs_stonith_config.stdout
+          - item.name in pcs_stonith_config.stdout
           - "'stonith-enabled: true' in pcs_property_config.stdout"
         fail_msg: "STONITH validation failed for {{ item.name }}."
         quiet: true

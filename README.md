@@ -62,6 +62,8 @@ Operasyon, troubleshooting ve failover runbook: [docs/operations-runbook.md](doc
 
 Manuel kurulum kaynak MOP: [docs/manual-rhel8-zfs-pacemaker-sds-ha-mop.md](docs/manual-rhel8-zfs-pacemaker-sds-ha-mop.md)
 
+Baremetal DL380 iLO fencing notlari: [docs/baremetal-dl380-fencing.md](docs/baremetal-dl380-fencing.md)
+
 ## TrueNAS Hazirliklari
 
 - iSCSI portal Storage network uzerinde olmalidir.

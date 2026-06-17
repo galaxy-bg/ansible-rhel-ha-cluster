@@ -1,4 +1,5 @@
 ---
 vault_hacluster_password: "ChangeMe"
 vault_vmware_fencing_password: "ChangeMe"
-
+vault_hpe_ilo_fencing_password: "ChangeMe"
+vault_redfish_fencing_password: "ChangeMe"
