@@ -41,8 +41,8 @@ cluster_resource_stickiness: 100
 vmware_fencing:
   enabled: true
   agent: fence_vmware_rest
-  vcenter: vcsa.kdx.local
-  username: svc_pacemaker_fence@vsphere.local
+  vcenter: 192.168.88.59
+  username: bozturk@gmlab.local
   password: "{{ vault_vmware_fencing_password }}"
   ssl_insecure: true
   power_timeout: 60
