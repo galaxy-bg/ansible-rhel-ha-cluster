@@ -113,8 +113,9 @@ ansible-playbook -i inventory/lab.ini site.yml --ask-vault-pass
 - `zpool import -f` ve `zpool import -F` kullanilmaz.
 - Production benzeri senaryoda `stonith-enabled=true` olmalidir.
 - Lab kolayligi icin STONITH kapatilabilir, fakat shared storage varken onerilmez.
-- Cluster resource baslama sirasi: `zfs-pool -> vip`
-- Cluster resource durma sirasi: `vip -> zfs-pool`
+- Cluster resource group: `frs-sds-group`
+- Group baslama sirasi: `zfs-pool -> vip`
+- Group durma sirasi: `vip -> zfs-pool`
 
 ## Failover Testleri
 

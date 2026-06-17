@@ -61,3 +61,22 @@
       failed_when:
         - vip_resource_create.rc != 0
         - "'already exists' not in vip_resource_create.stderr"
+
+    - name: Refresh Pacemaker resource configuration
+      ansible.builtin.command: pcs resource config
+      register: pcs_resource_config_after_create
+      changed_when: false
+      failed_when: false
+      run_once: true
+
+    - name: Create resource group for ZFS pool and VIP
+      ansible.builtin.command: "pcs resource group add {{ resource_group_name }} zfs-pool {{ vip_resource_name }}"
+      run_once: true
+      when:
+        - resource_group_enabled | bool
+        - "'Group: ' ~ resource_group_name not in pcs_resource_config_after_create.stdout"
+      register: resource_group_add
+      changed_when: resource_group_add.rc == 0
+      failed_when:
+        - resource_group_add.rc != 0
+        - "'already exists' not in resource_group_add.stderr | lower"

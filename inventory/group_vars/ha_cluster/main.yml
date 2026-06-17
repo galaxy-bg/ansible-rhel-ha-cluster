@@ -23,6 +23,8 @@ iscsi_interface: ens36
 vip_resource_name: vip
 vip_address: 192.168.88.120
 vip_cidr_netmask: 24
+resource_group_enabled: true
+resource_group_name: frs-sds-group
 
 truenas_iscsi_portal: 172.22.2.33
 truenas_iscsi_port: 3260

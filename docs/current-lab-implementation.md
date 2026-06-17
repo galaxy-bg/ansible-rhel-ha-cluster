@@ -88,3 +88,15 @@ ansible-playbook -i inventory/lab.ini playbooks/60_resources.yml --ask-vault-pas
 ansible-playbook -i inventory/lab.ini playbooks/70_constraints.yml --ask-vault-pass
 ansible-playbook -i inventory/lab.ini playbooks/90_validation.yml --ask-vault-pass
 ```
+
+## Pacemaker Resource Model
+
+Ilk fazda ZFS pool ve VIP ayni Pacemaker resource group icinde yonetilir:
+
+```text
+frs-sds-group:
+  zfs-pool
+  vip
+```
+
+Group, kaynaklari ayni node'da tutar ve sirali baslatir. Start sirasi `zfs-pool -> vip`, stop sirasi `vip -> zfs-pool` olur.
